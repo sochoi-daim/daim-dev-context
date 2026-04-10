@@ -1,0 +1,20 @@
+{
+  "name": "daim-context",
+  "version": "1.0.0",
+  "metadata": {
+    "description": "DAIM plugins for project context analysis",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "daim",
+      "description": "Quickly understand new projects and generate token-efficient Context Documents.",
+      "version": "1.0.0",
+      "source": ".",
+      "category": "development",
+      "author": {
+        "name": "DAIM Research"
+      }
+    }
+  ]
+}

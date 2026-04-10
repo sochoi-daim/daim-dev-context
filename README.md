@@ -23,7 +23,7 @@ When you take on a new project or unfamiliar codebase, run a single command to o
 
 2. Install the plugin:
 ```
-/plugin install daim@daim-context
+/plugin install daim
 ```
 
 ### From local directory (development)
