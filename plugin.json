@@ -1,0 +1,7 @@
+{
+  "name": "dev-context-guide",
+  "version": "1.0.0",
+  "description": "개발자가 새 프로젝트를 빠르게 파악하고 토큰 효율적인 Context Document를 생성하는 스킬. 웹(React/Vue)과 유니티(Unity) 프로젝트에 특화.",
+  "author": "DAIM Research",
+  "skills": ["dev-context-guide"]
+}
