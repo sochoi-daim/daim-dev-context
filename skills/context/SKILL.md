@@ -3,7 +3,7 @@ name: daim
 description: |
   Skill for quickly understanding a new project or codebase and generating
   a token-efficient, reusable Context Document.
-  Specialized for Web (React, Vue) and Unity (URP) projects.
+  Specialized for Frontend (React, Next.js, Vue), Unity (URP), and Backend (Express, NestJS) projects.
   Triggered by "/context", "/context fast", "/update", "/save" commands.
   Also triggered by requests like "analyze this project", "create a context document",
   "generate context without questions", "save the context".
@@ -23,7 +23,7 @@ skip repeated explanations and jump straight into work.
 | Command | Action |
 |---------|--------|
 | `/context` | Start project analysis (interview + file scan) |
-| `/context web` | Start with web-specific interview |
+| `/context frontend` | Start with frontend-specific interview |
 | `/context unity` | Start with Unity-specific interview |
 | `/context fast` | Generate document immediately from files only (no questions) |
 | `/update` | Add or modify sections in an existing Context Document |
@@ -70,7 +70,7 @@ Only confirmed information is filled in; the rest is tagged.
 **Steps:**
 1. Auto-detect project type (file structure, extensions, meta files)
 2. Auto-detect framework
-   - Web: `package.json` dependencies → React / Vue / other
+   - Frontend: `package.json` dependencies → React / Vue / other
    - Unity: `ProjectVersion.txt`, `*.asmdef`, scene files
 3. Fill only verifiable items; mark uncertain items with `[inferred]` / `[needs confirmation]`
 4. Output Context Document immediately
@@ -97,14 +97,16 @@ Otherwise → ask:
 
 ```
 What type of project is this?
-  1) Web
-  2) Unity
-  3) Other
+  1) Frontend (React, Next.js, Vue)
+  2) Unity (URP)
+  3) Backend (Express, NestJS)
+  4) Other
 ```
 
 ### Step 2. Type-Specific Interview
 
 Ask one question at a time, proceed after each answer.
+If the user answers "skip", "pass", "모름", or "s", mark the item as `[needs confirmation]` and move on.
 
 **Common Questions (all types)**
 ```
@@ -113,31 +115,35 @@ Q2. What task are you currently working on?
 Q3. Any particularly complex or sensitive areas?
 ```
 
-**Web additional questions** → see `references/web-interview.md`
+**Frontend additional questions** → see `references/web-interview.md`
 **Unity additional questions** → see `references/unity-interview.md`
+**Backend additional questions** → see `references/backend-interview.md`
 
 ### Step 3. File Analysis (when files are provided)
 
 **Auto-analysis**
 1. Scan root directory structure
 2. Check type-specific meta files
-   - Web: `package.json`, `tsconfig.json`, `.env.example`
+   - Frontend: `package.json`, `tsconfig.json`, `.env.example`
    - Unity: `ProjectSettings/ProjectVersion.txt`, `Packages/manifest.json`, `*.asmdef`
+   - Backend: `package.json`, `tsconfig.json`, `.env.example`, `Dockerfile`
 3. Sample key folders and modules
 
 **Always ask the user to confirm the entry point**
 ```
 Please specify the entry point (where work begins).
-  Web examples: src/pages/index.tsx, src/App.vue, src/main.ts
+  Frontend examples: src/pages/index.tsx, src/App.vue, src/main.ts
   Unity examples: Assets/Scripts/Managers/GameManager.cs, first scene name
+  Backend examples: src/main.ts, src/app.module.ts, src/index.ts
 ```
 
 ### Step 4. Generate Context Document
 
 Fill the appropriate template with collected information:
-- Web (React) → `references/web-template.md` React section
-- Web (Vue) → `references/web-template.md` Vue section
+- Frontend (React / Next.js) → `references/web-template.md` React section
+- Frontend (Vue) → `references/web-template.md` Vue section
 - Unity → `references/unity-template.md`
+- Backend → `references/backend-template.md`
 
 Items mentioned in interview but not confirmed by files → `[inferred]`
 Items neither mentioned nor found in files → `[needs confirmation]`
@@ -172,6 +178,48 @@ Remove tags from updated items and mark them as confirmed.
 
 ---
 
+## `/show` — Display Current Document
+
+Print the current Context Document to the conversation.
+
+Useful to review the document after generation or updates before saving.
+
+```
+/show
+```
+
+If no document has been generated yet:
+```
+No Context Document in this session. Run /context or /context fast first.
+```
+
+---
+
+## `/help` — Print Command List
+
+Print a summary of all available commands and their descriptions.
+
+```
+/daim:help
+```
+
+Output:
+```
+daim — Dev Context Guide
+
+Commands:
+  /daim:context            Start interview-based project analysis
+  /daim:context frontend   Start with frontend-specific interview
+  /daim:context unity      Start with Unity-specific interview
+  /daim:context fast       Generate document from files only (no questions)
+  /daim:update             Update an existing Context Document
+  /daim:save [path]        Save document to a file
+  /daim:show               Print current document
+  /daim:help               Print this command list
+```
+
+---
+
 ## `/save [path]` — Save to File
 
 Save the Context Document as a markdown file.
@@ -185,8 +233,8 @@ Warning: 2 items still marked [needs confirmation]. Save anyway? (y/n)
 - Path given: save to that path
 
 ```
-/save                          → ./context-myapp-20250410.md
-/save ./docs/                  → ./docs/context-myapp-20250410.md
+/save                          → ./context-myapp-20260410.md
+/save ./docs/                  → ./docs/context-myapp-20260410.md
 /save ./docs/myapp-context.md  → ./docs/myapp-context.md
 ```
 
@@ -208,7 +256,9 @@ All generated documents follow these rules:
 
 | File | Purpose |
 |------|---------|
-| `references/web-interview.md` | Web project additional interview questions |
+| `references/web-interview.md` | Frontend project additional interview questions |
 | `references/unity-interview.md` | Unity project additional interview questions |
-| `references/web-template.md` | Web Context Document template (React / Vue branches) |
+| `references/backend-interview.md` | Backend project additional interview questions |
+| `references/web-template.md` | Frontend Context Document template (React / Next.js / Vue) |
 | `references/unity-template.md` | Unity Context Document template |
+| `references/backend-template.md` | Backend Context Document template |
