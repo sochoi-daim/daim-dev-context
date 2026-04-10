@@ -1,188 +1,188 @@
 ---
-name: dev-context-guide
+name: daim
 description: |
-  개발자가 새로운 프로젝트나 코드베이스를 맡았을 때 업무 맥락을 빠르게 파악하고,
-  이후 작업에서 토큰 효율적으로 재사용할 수 있는 참고 문서를 생성하는 스킬.
-  웹(React, Vue 등) 및 유니티(Unity) 프로젝트에 특화되어 있음.
-  "/context", "/context fast", "/update", "/save" 커맨드로 동작.
-  "이 프로젝트 파악해줘", "업무 맥락 문서 만들어줘", "/context 시작",
-  "질문 없이 바로 문서 뽑아줘", "컨텍스트 저장해줘" 같은 요청에 반드시 이 스킬을 사용.
-  새 프로젝트, 낯선 모듈, 인수인계 상황 모두 포함.
+  Skill for quickly understanding a new project or codebase and generating
+  a token-efficient, reusable Context Document.
+  Specialized for Web (React, Vue) and Unity (URP) projects.
+  Triggered by "/context", "/context fast", "/update", "/save" commands.
+  Also triggered by requests like "analyze this project", "create a context document",
+  "generate context without questions", "save the context".
+  Covers new projects, unfamiliar modules, and handover scenarios.
 ---
 
 # Dev Context Guide
 
-개발자가 어떤 프로젝트를 맡든 커맨드 하나로 업무 맥락을 체계적으로 파악하고,
-이후 Claude와의 대화에서 반복 설명 없이 바로 작업에 들어갈 수 있는
-**압축된 참고 문서(Context Document)** 를 생성하고 저장한다.
+Systematically analyze any project with a single command and generate
+a **compressed Context Document** so future Claude conversations can
+skip repeated explanations and jump straight into work.
 
 ---
 
-## 커맨드 목록
+## Commands
 
-| 커맨드 | 동작 |
-|--------|------|
-| `/context` | 새 프로젝트 맥락 파악 시작 (인터뷰 + 파일 분석) |
-| `/context web` | 웹 프로젝트 특화 인터뷰로 시작 |
-| `/context unity` | 유니티 프로젝트 특화 인터뷰로 시작 |
-| `/context fast` | 질문 없이 파일만으로 즉시 문서 생성 |
-| `/update` | 기존 Context Document에 내용 추가/수정 |
-| `/save [경로]` | 현재 Context Document를 지정 경로에 저장 |
-| `/show` | 현재 대화의 Context Document 출력 |
-| `/help` | 커맨드 목록 출력 |
-
----
-
-## 작성 원칙: 가정 금지
-
-**Claude는 스택/프레임워크를 안다고 해서 프로젝트 내용을 임의로 채워선 안 된다.**
-
-예를 들어 "NestJS를 쓴다"는 말을 들었더라도:
-- 폴더 구조, 모듈 구성, 엔드포인트는 프로젝트마다 다르다
-- 파일을 직접 확인하거나 사용자에게 물어보기 전까지는 `[확인 필요]` 로 표시한다
-- 확인된 내용과 추론된 내용을 명확히 구분한다
-
-### 신뢰도 태그 규칙
-
-문서 내 모든 항목은 아래 태그 중 하나를 기준으로 작성한다:
-
-| 태그 | 의미 |
-|------|------|
-| (태그 없음) | 파일/코드에서 직접 확인된 사실 |
-| `[추론됨]` | 구조나 패턴으로 추론. 높은 확률이지만 미확인 |
-| `[확인 필요]` | 파일이 없거나 불확실해서 사용자 확인이 필요 |
-
-문서 생성 후에는 `[확인 필요]` 항목을 모아서 사용자에게 한 번에 제시한다.
+| Command | Action |
+|---------|--------|
+| `/context` | Start project analysis (interview + file scan) |
+| `/context web` | Start with web-specific interview |
+| `/context unity` | Start with Unity-specific interview |
+| `/context fast` | Generate document immediately from files only (no questions) |
+| `/update` | Add or modify sections in an existing Context Document |
+| `/save [path]` | Save the current Context Document to a file |
+| `/show` | Print the current Context Document |
+| `/help` | Print command list |
 
 ---
 
-## `/context fast` — 즉시 문서 생성 (질문 없음)
+## Core Principle: No Assumptions
 
-파일/코드를 첨부하면 **질문 없이 바로** Context Document를 생성한다.
-가정 금지 원칙에 따라 확인된 것만 채우고, 나머지는 태그로 표시한다.
+**Claude must never fill in project details based on general framework knowledge.**
 
-**사용법:**
+For example, even if told "this project uses NestJS":
+- Folder structure, module layout, and endpoints differ per project
+- Mark anything unverified as `[needs confirmation]`
+- Clearly distinguish confirmed facts from inferences
+
+### Confidence Tags
+
+Every item in the document uses one of these tags:
+
+| Tag | Meaning |
+|-----|---------|
+| (none) | Directly confirmed from files or code |
+| `[inferred]` | Inferred from patterns — high probability but unverified |
+| `[needs confirmation]` | No file evidence or uncertain — user must confirm |
+
+After generation, all `[needs confirmation]` items are collected and presented to the user at once.
+
+---
+
+## `/context fast` — Instant Generation (No Questions)
+
+Attach files/code and get a Context Document **immediately with no questions**.
+Only confirmed information is filled in; the rest is tagged.
+
+**Usage:**
 ```
 /context fast
-[파일 또는 코드 첨부]
+[attach files or code]
 ```
 
-**동작 순서:**
-1. 타입 자동 판별 (파일 구조, 확장자, 메타 파일 기반)
-2. 프레임워크 자동 판별
-   - 웹: `package.json` dependencies → React / Vue / 기타
-   - 유니티: `ProjectVersion.txt`, `*.asmdef`, 씬 파일
-3. 파일에서 확인 가능한 항목만 채우고, 불확실한 항목은 `[추론됨]` / `[확인 필요]` 표시
-4. Context Document 즉시 출력
-5. 생성 완료 후 `[확인 필요]` 항목만 모아서 한 번에 제시:
+**Steps:**
+1. Auto-detect project type (file structure, extensions, meta files)
+2. Auto-detect framework
+   - Web: `package.json` dependencies → React / Vue / other
+   - Unity: `ProjectVersion.txt`, `*.asmdef`, scene files
+3. Fill only verifiable items; mark uncertain items with `[inferred]` / `[needs confirmation]`
+4. Output Context Document immediately
+5. Collect and present `[needs confirmation]` items:
 
 ```
-📋 아래 항목은 확인이 필요해요. 맞으면 넘어가고, 틀리면 알려주세요:
-  - 진입점: src/main.ts [추론됨]
-  - 상태 관리: 확인되지 않음 [확인 필요]
-  - API 베이스 URL: [확인 필요]
-확인 후 /save [경로] 로 저장하세요.
+Items that need your confirmation (skip if correct, correct if wrong):
+  - Entry point: src/main.ts [inferred]
+  - State management: not identified [needs confirmation]
+  - API base URL: [needs confirmation]
+Run /save [path] after confirming.
 ```
 
 ---
 
-## `/context` — 인터뷰 기반 맥락 파악
+## `/context` — Interview-Based Analysis
 
-질문-답변을 통해 정확도 높은 문서를 만든다. 파일이 없어도 사용 가능.
+Build a high-accuracy document through Q&A. Works even without files.
 
-### Step 1. 프로젝트 타입 확인
+### Step 1. Identify Project Type
 
-파일/코드가 첨부된 경우 → 자동 분석 후 Step 3으로
-첨부 없는 경우 → 아래 질문:
-
-```
-어떤 프로젝트인가요?
-  1) 웹 (Web)
-  2) 유니티 (Unity)
-  3) 기타
-```
-
-### Step 2. 타입별 인터뷰
-
-질문은 한 번에 하나씩, 답변을 받은 후 다음으로 넘어간다.
-
-**공통 질문 (모든 타입)**
-```
-Q1. 프로젝트 이름과 한 줄 설명은?
-Q2. 현재 어떤 작업을 해야 하는 상황인가요?
-Q3. 특별히 복잡하거나 주의해야 할 부분이 있나요?
-```
-
-**웹 추가 질문** → `references/web-interview.md` 참고
-**유니티 추가 질문** → `references/unity-interview.md` 참고
-
-### Step 3. 분석 (파일 제공 시)
-
-**자동 분석**
-1. 루트 디렉토리 전체 구조 파악
-2. 타입별 메타 파일 확인
-   - 웹: `package.json`, `tsconfig.json`, `.env.example`
-   - 유니티: `ProjectSettings/ProjectVersion.txt`, `Packages/manifest.json`, `*.asmdef`
-3. 핵심 폴더/모듈 샘플링
-
-**진입점은 반드시 사용자에게 직접 확인한다**
-```
-진입점(작업 시작 위치)을 알려주세요.
-  웹 예시) src/pages/index.tsx, src/App.vue, src/main.ts
-  유니티 예시) Assets/Scripts/Managers/GameManager.cs, 첫 번째 씬 이름
-```
-
-### Step 4. Context Document 생성
-
-수집된 정보로 타입별 템플릿을 채운다:
-- 웹(React) → `references/web-template.md` 의 React 섹션
-- 웹(Vue) → `references/web-template.md` 의 Vue 섹션
-- 유니티 → `references/unity-template.md`
-
-인터뷰에서 언급됐지만 파일로 확인되지 않은 항목은 `[추론됨]` 표시.
-언급도 없고 파일도 없는 항목은 `[확인 필요]` 표시.
-
-### Step 5. 검증
-
-문서 생성 후 `[확인 필요]` 항목을 모아서 한 번에 제시:
+If files/code are attached → auto-analyze, skip to Step 3
+Otherwise → ask:
 
 ```
-📋 아래 항목을 확인해주세요:
-  - [항목]: [이유]
+What type of project is this?
+  1) Web
+  2) Unity
+  3) Other
+```
+
+### Step 2. Type-Specific Interview
+
+Ask one question at a time, proceed after each answer.
+
+**Common Questions (all types)**
+```
+Q1. Project name and one-line description?
+Q2. What task are you currently working on?
+Q3. Any particularly complex or sensitive areas?
+```
+
+**Web additional questions** → see `references/web-interview.md`
+**Unity additional questions** → see `references/unity-interview.md`
+
+### Step 3. File Analysis (when files are provided)
+
+**Auto-analysis**
+1. Scan root directory structure
+2. Check type-specific meta files
+   - Web: `package.json`, `tsconfig.json`, `.env.example`
+   - Unity: `ProjectSettings/ProjectVersion.txt`, `Packages/manifest.json`, `*.asmdef`
+3. Sample key folders and modules
+
+**Always ask the user to confirm the entry point**
+```
+Please specify the entry point (where work begins).
+  Web examples: src/pages/index.tsx, src/App.vue, src/main.ts
+  Unity examples: Assets/Scripts/Managers/GameManager.cs, first scene name
+```
+
+### Step 4. Generate Context Document
+
+Fill the appropriate template with collected information:
+- Web (React) → `references/web-template.md` React section
+- Web (Vue) → `references/web-template.md` Vue section
+- Unity → `references/unity-template.md`
+
+Items mentioned in interview but not confirmed by files → `[inferred]`
+Items neither mentioned nor found in files → `[needs confirmation]`
+
+### Step 5. Verification
+
+Collect and present all `[needs confirmation]` items:
+
+```
+Please verify the following:
+  - [item]: [reason]
   ...
-맞으면 /save [경로] 로 저장하세요. 틀린 부분은 알려주시면 바로 수정할게요.
+Run /save [path] to save. Let me know if anything is incorrect.
 ```
 
 ---
 
-## `/update` — 문서 업데이트
+## `/update` — Update Document
 
-기존 Context Document에 내용을 추가하거나 수정한다.
+Add or modify content in an existing Context Document.
 
 ```
-어떤 내용을 업데이트할까요?
-  1) 새로운 모듈/기능 추가
-  2) 현재 작업 컨텍스트 변경
-  3) 주의사항 추가
-  4) 직접 입력
+What would you like to update?
+  1) Add new module/feature
+  2) Change current work context
+  3) Add notes/caveats
+  4) Free-form input
 ```
 
-선택 후 해당 섹션만 수정하고 전체 문서를 다시 출력한다.
-수정된 항목의 태그는 제거하고 확인된 내용으로 처리한다.
+After selection, modify only the relevant section and re-output the full document.
+Remove tags from updated items and mark them as confirmed.
 
 ---
 
-## `/save [경로]` — 파일 저장
+## `/save [path]` — Save to File
 
-생성된 Context Document를 마크다운 파일로 저장한다.
-`[확인 필요]` 항목이 남아 있으면 저장 전에 경고를 표시한다:
+Save the Context Document as a markdown file.
+Warn if `[needs confirmation]` items remain:
 
 ```
-⚠️ [확인 필요] 항목이 2개 남아 있어요. 그래도 저장할까요? (y/n)
+Warning: 2 items still marked [needs confirmation]. Save anyway? (y/n)
 ```
 
-- 경로 미입력 시: `./context-[프로젝트명]-[날짜].md` 로 저장
-- 경로 입력 시: 해당 경로에 저장
+- No path given: `./context-[project-name]-[date].md`
+- Path given: save to that path
 
 ```
 /save                          → ./context-myapp-20250410.md
@@ -192,23 +192,23 @@ Q3. 특별히 복잡하거나 주의해야 할 부분이 있나요?
 
 ---
 
-## 토큰 최적화 원칙
+## Token Optimization Principles
 
-생성되는 모든 문서는 아래 원칙을 따른다:
+All generated documents follow these rules:
 
-- 산문보다 **구조화된 형식** (표, 코드블록, 리스트) 사용
-- 파일 전체보다 **경로 + 역할** 요약으로 대체
-- 반복되는 패턴은 **한 번만 설명하고 참조**
-- 현재 작업과 무관한 내용은 **과감히 생략**
-- 코드는 **시그니처만** 포함 (구현 전체 X)
+- Prefer **structured formats** (tables, code blocks, lists) over prose
+- Replace full files with **path + role** summaries
+- Explain repeated patterns **once and reference**
+- **Omit** anything irrelevant to the current task
+- Include only **signatures**, not full implementations
 
 ---
 
-## 참고 파일 안내
+## Reference Files
 
-| 파일 | 용도 |
-|------|------|
-| `references/web-interview.md` | 웹 프로젝트 추가 인터뷰 질문 |
-| `references/unity-interview.md` | 유니티 프로젝트 추가 인터뷰 질문 |
-| `references/web-template.md` | 웹 Context Document 템플릿 (React / Vue 분기 포함) |
-| `references/unity-template.md` | 유니티 Context Document 템플릿 |
+| File | Purpose |
+|------|---------|
+| `references/web-interview.md` | Web project additional interview questions |
+| `references/unity-interview.md` | Unity project additional interview questions |
+| `references/web-template.md` | Web Context Document template (React / Vue branches) |
+| `references/unity-template.md` | Unity Context Document template |
